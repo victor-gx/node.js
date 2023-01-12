@@ -309,3 +309,224 @@ fs.readFile(__dirname + '/files/1.txt', 'utf8', function(err, dataStr) {
   })
 ```
 
+# path 路径模块
+
+## 什么是 path 路径模块
+
+`path` 模块是 Node.js 官方提供的、用来处理路径的模块。它提供了一系列的方法和属性，用来满足用户对路径的处理需求。
+
+例如：
+
+- `path.join() `方法，用来将多个路径片段拼接成一个完整的路径字符串
+- `path.basename()` 方法，用来从路径字符串中，将文件名解析出来
+
+如果要在 JavaScript 代码中，使用 `path` 模块来处理路径，则需要使用如下的方式先导入它：
+
+```js
+const path = require('path')
+```
+
+## 路径拼接
+
+### path.join()的语法格式
+
+使用 `path.join()` 方法，可以把多个路径片段拼接为完整的路径字符串，语法格式如下：
+
+```js
+path.join([...paths])
+```
+
+参数解读：
+
+- `...paths <string>` 路径片段的序列
+- 返回值:` <string>`
+
+### path.join()的代码示例
+
+使用 `path.join()` 方法，可以把多个路径片段拼接为完整的路径字符串：
+
+```js
+const path = require('path')
+const fs = require('fs')
+
+// 注意：  ../ 会抵消前面的路径
+// const pathStr = path.join('/a', '/b/c', '../', './d', 'e')
+// console.log(pathStr)  // \a\b\d\e
+
+// fs.readFile(__dirname + '/files/1.txt')
+fs.readFile(path.join(__dirname, '/files/1.txt'), 'utf8', function(err, dataStr) {
+    if (err) {
+        console.log(err.message)
+    }
+    console.log(dataStr)
+})
+```
+
+注意：今后凡是涉及到路径拼接的操作，都要使用 `path.join()` 方法进行处理。不要直接使用 `+ `进行字符串的拼接。
+
+## 获取路径中的文件名
+
+### path.basename() 的语法格式
+
+使用 `path.basename()` 方法，可以获取路径中的最后一部分，经常通过这个方法获取路径中的文件名，语法格式如下：
+
+```js
+path.basename(path[, ext])
+```
+
+参数解读：
+
+- `path <string>` 必选参数，表示一个路径的字符串
+- `ext <string>` 可选参数，表示文件扩展名
+- 返回: `<string>` 表示路径中的最后一部分
+
+### path.basename() 的代码示例
+
+使用 `path.basename()` 方法，可以从一个文件路径中，获取到文件的名称部分：
+
+```js
+const path = require('path')
+
+// 定义文件的存放路径
+const fpath = '/a/b/c/index.html'
+
+// const fullName = path.basename(fpath)
+// console.log(fullName)
+
+const nameWithoutExt = path.basename(fpath, '.html')
+console.log(nameWithoutExt)
+```
+
+## 获取路径中的文件扩展名
+
+### path.extname() 的语法格式
+
+使用 `path.extname()` 方法，可以获取路径中的扩展名部分，语法格式如下：
+
+```js
+path.extname(path)
+```
+
+参数解读：
+
+- `path <string>`必选参数，表示一个路径的字符串
+- 返回: `<string>` 返回得到的扩展名字符串
+
+### path.extname() 的代码示例
+
+使用 `path.extname()` 方法，可以获取路径中的扩展名部分
+
+```js
+const path = require('path')
+
+// 这是文件的存放路径
+const fpath = '/a/b/c/index.html'
+
+const fext = path.extname(fpath)
+console.log(fext)
+```
+
+## 综合案例 - 时钟案例
+
+### 案例要实现的功能
+
+![image-20230111233826793](https://victor-gx.oss-cn-beijing.aliyuncs.com/img/2023/202301112338955.png)
+
+将素材目录下的` index.html `页面，拆分成三个文件，分别是：
+
+- `index.css`
+- `index.js`
+- `index.html`
+
+并且将拆分出来的 3 个文件，存放到 `clock` 目录中。
+
+### 案例的实现步骤
+
+1. 创建两个正则表达式，分别用来匹配 `<style> `和 `<script> `标签
+2. 使用` fs` 模块，读取需要被处理的 `HTML` 文件
+3. 自定义 `resolveCSS` 方法，来写入 `index.css` 样式文件
+4. 自定义 `resolveJS` 方法，来写入 `index.js` 脚本文件
+5. 自定义 `resolveHTML` 方法，来写入 `index.html` 文件
+
+#### 步骤1 - 导入需要的模块并创建正则表达式
+
+```js
+// 1.1 导入 fs 模块
+const fs = require('fs')
+// 1.2 导入 path 模块
+const path = require('path')
+
+// 1.3 定义正则表达式，分别匹配 <style></style> 和 <script></script> 标签
+//      其中\s表示空白字符； \S表示非空白字符； * 表示匹配任意次
+const regStyle = /<style>[\s\S]*<\/style>/
+const regScript = /<script>[\s\S]*<\/script>/
+```
+
+#### 步骤2 - 使用 fs 模块读取需要被处理的 html 文件
+
+```js
+// 2.1 调用 fs.readFile() 方法读取文件
+fs.readFile(path.join(__dirname, 'src/index.html'), 'utf8', (err, dataStr) => {
+    if (err) return console.log('读取HTML文件失败！' + err.message)
+
+    // 2.3 读取文件成功后，调用对应的三个方法，分别拆解出 css, js, html 文件
+    resolveCSS(dataStr)
+    resolveJS(dataStr)
+    resolveHTML(dataStr)
+})
+```
+
+####  步骤3 – 自定义 resolveCSS 方法
+
+```js
+// 3.1 定义处理 css 样式的方法
+function resolveCSS(htmlStr) {
+    // 3.2 使用正则提取需要的内容
+    const r1 = regStyle.exec(htmlStr)
+    // 3.3 将提取出来的样式字符串，进行字符串的 replace 替换操作
+    const newCSS = r1[0].replace('<style>', '').replace('</style>', '')
+    // 3.4 调用 fs.writeFile() 方法，将提取的样式，写入到 clock 目录中 index.css 的文件里面
+    fs.writeFile(path.join(__dirname, './clock/index.css'), newCSS, (err) => {
+        if (err) return console.log('写入css样式失败' + err.message)
+        console.log('写入成功')
+    })
+}
+```
+
+#### 步骤4 – 自定义 resolveJS 方法
+
+```js
+// 4.1 定义处理 js 脚本的方法
+function resolveJS(htmlStr) {
+    // 4.2 通过正则，提取对应的 <script></script> 标签内容
+    const r2 = regScript.exec(htmlStr)
+    // 4.3 将提取出来的内容，做进一步的处理
+    const newJS = r2[0].replace('<script>', '').replace('</script>', '')
+    // 4.4 将处理的结果，写入到 clock 目录中的 index.js 文件里面
+    fs.writeFile(path.join(__dirname, '/clock/index.js'), newJS, (err) => {
+        if (err) return console.log('写入css样式失败' + err.message)
+        console.log('写入成功')
+    })
+}
+```
+
+#### 步骤5 – 自定义 resolveHTML 方法
+
+```js
+// 5.1 定义处理 HTML 结构的方法
+function resolveHTML(htmlStr) {
+    // 5.2 将字符串调用 replace 方法，把内嵌的 style 和 script 标签，替换为外联的 link 和 script 标签
+    const newHTML = htmlStr.replace(regStyle, '<link rel="stylesheet" href="./index.css" />').replace(regScript, '<script src="./index.js"></script>')
+
+    // 5.3 写入 index.html 这个文件
+  fs.writeFile(path.join(__dirname, './clock/index.html'), newHTML, (err) => {
+    if (err) return console.log('写入 HTML 文件失败！' + err.message)
+    console.log('写入 HTML 页面成功！')
+  })
+}
+```
+
+### 案例的两个注意点
+
+- `fs.writeFile()` 方法只能用来创建文件，不能用来创建路径
+- 重复调用 `fs.writeFile()` 写入同一个文件，新写入的内容会覆盖之前的旧内容
