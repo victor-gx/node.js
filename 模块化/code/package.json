@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "moment": "^2.29.4"
+  },
+  "name": "code",
+  "version": "1.0.0",
+  "main": "1.m1.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "webpack": "^5.75.0"
+  }
+}
