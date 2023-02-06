@@ -2,6 +2,10 @@
 const db = require('../db/index')
 // 导入 bcryptjs 这个包
 const bcrypt = require('bcryptjs')
+// 导入生成 Token 的包
+const jwt = require('jsonwebtoken')
+// 导入全局的配置文件
+const config = require('../config')
 
 // 注册用户的处理函数
 exports.regUser = (req, res) => {
@@ -67,6 +71,15 @@ exports.login = (req, res) => {
     if (!compareResult) return res.cc('登录失败！')
 
     // TODO：在服务器端生成 Token 的字符串
-    res.send("login OK")
+    const user = { ...results[0], password: '', user_pic: '' }
+    // 对用户的信息进行加密，生成 Token 字符串
+    const tokenStr = jwt.sign(user, config.jwtSecretKey, { expiresIn: config.expiresIn })
+    // 调用 res.send() 将 Token 响应给客户端
+    res.send({
+      status: 0,
+      message: '登录成功！',
+      token:  'Bearer ' + tokenStr,
+    })
+    // res.send("login OK")
   })
 }
